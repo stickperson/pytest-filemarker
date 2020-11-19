@@ -20,9 +20,9 @@ class PytestNameVisitor(ast.NodeVisitor):
                 for elt in node.value.elts:
                     # ast.Constant used since 3.8. ast.Str used before
                     if hasattr(elt, 'value'):
-                        self.marks.add(elt.value)
+                        self.marks.add(elt.value)  # type: ignore
                     elif hasattr(elt, 's'):
-                        self.marks.add(elt.s)
+                        self.marks.add(elt.s)  # type: ignore
 
 
 class Inspector:
