@@ -81,23 +81,22 @@ class FileMarkerPlugin:
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_collection_modifyitems(self, session, config, items) -> None:
-        # marks = ' or '.join(self._marks)
-        # markexpr = config.getoption('markexpr')
-        # markexpr = f'{markexpr} or {marks}'
-        # # config.option.markexpr = markexpr
-        # print('')
-        # print('**')
-        # config.option.markexpr = ''
-        # print(config.option.markexpr)
-        skip = pytest.mark.skip(reason='Skipping because no marks match')
-        for item in items:
-            skip_item = True
-            for m in item.iter_markers():
-                if m.name in self._marks:
-                    skip_item = False
-                    continue
-            if skip_item:
-                item.add_marker('skip')
+        # Any of the specified marks should be run
+        marks = ' or '.join(self._marks)
+        markexpr = config.getoption('markexpr')
+
+        # Add on to marks passed in if supplied
+        if markexpr and marks:
+            markexpr = f'{markexpr} or {marks}'
+        elif marks:
+            markexpr = marks
+
+        # Update the marks. Otherwise, skip all tests.
+        if markexpr:
+            config.option.markexpr = markexpr
+        else:
+            config.hook.pytest_deselected(items=items)
+            items[:] = []
 
 
 def pytest_configure(config):
