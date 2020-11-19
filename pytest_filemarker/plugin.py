@@ -18,9 +18,6 @@ class PytestNameVisitor(ast.NodeVisitor):
 
 
 class Inspector:
-    """
-    Looks at a file, returns a list of class names that inherit from Workflow class
-    """
     def __init__(self, fname, variable):
         self._fname = fname
         self._visitor = None
@@ -39,25 +36,25 @@ class Inspector:
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup('joemark')
+    group = parser.getgroup('filemarker')
     group._addoption(
-        '--marky-active', action="store_true", dest="active", default=False,
+        '--filemarker-active', action="store_true", dest="active", default=False,
         help='Should the plugin be active'
     )
-    group._addoption('--mark-include-marks', dest='marks', nargs='+',
+    group._addoption('--filemarker-marks', dest='marks', nargs='+',
         help='Marks to include. Note this is a list of mark names, not expressions'
     )
 
-    group._addoption('--mark-files', dest='files', nargs='+',
+    group._addoption('--filemarker-files', dest='files', nargs='+',
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
-    group._addoption('--mark-variable-name', dest='variable', default='PYTEST_MARKS',
+    group._addoption('--filemarker-variable-name', dest='variable',
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
 
-class MyPlugin:
+class FileMarkerPlugin:
     def __init__(self, variable, marks=None, files=None):
         if marks is None:
             marks = set()
@@ -89,8 +86,17 @@ class MyPlugin:
 
 def pytest_configure(config):
     active = config.getoption("active")
+    variable = config.getoption('variable')
+    marks = config.getoption('marks')
+    files = config.getoption('files')
+
+    active = active or any([variable, marks, files])
+
+    if variable is None:
+        variable = 'PYTEST_MARKS'
+
     if active:
-        plugin = MyPlugin(
-            config.getoption('variable'), marks=config.getoption('marks'), files=config.getoption('files')
+        plugin = FileMarkerPlugin(
+            variable, marks=marks, files=files
         )
         config.pluginmanager.register(plugin, "_filemarker")
