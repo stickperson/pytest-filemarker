@@ -5,6 +5,7 @@ from typing import Set
 
 import pytest
 
+
 class PytestNameVisitor(ast.NodeVisitor):
     def __init__(self, variable: str) -> None:
         super().__init__()
@@ -41,23 +42,25 @@ class Inspector:
         return self._visitor.marks
 
 
-
 def pytest_addoption(parser):
     group = parser.getgroup('filemarker')
     group.addoption(
         '--filemarker-active', action="store_true", dest="active", default=False,
-        help='Should the plugin be active'
+        help='Should the plugin be active? Automatically set to True if other options are specified.'
     )
 
-    group.addoption('--filemarker-files', dest='files', nargs='+',
+    group.addoption(
+        '--filemarker-files', dest='files', metavar="'file1 file2...'",
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
-    group.addoption('--filemarker-variable-name', dest='variable',
-        help='Files to search. If not supplied will look at the latest changes from git.'
+    group.addoption(
+        '--filemarker-variable-name', dest='variable',
+        help='Variable which contains a list of marks. Defaults to PYTEST_MARKS'
     )
 
-    parser.addini('filemarker_variable', help='joetest')
+    parser.addini('filemarker-variable', help='Variable which contains a list of marks')
+
 
 class FileMarkerPlugin:
     def __init__(self, variable, files=None) -> None:
@@ -99,7 +102,10 @@ def pytest_configure(config):
     active = active or any([variable, files])
 
     if variable is None:
-        variable = config.getini('filemarker_variable') or 'PYTEST_MARKS'
+        variable = config.getini('filemarker-variable') or 'PYTEST_MARKS'
+
+    if files:
+        files = files.split()
 
     if active:
         plugin = FileMarkerPlugin(
