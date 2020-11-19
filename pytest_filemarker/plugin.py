@@ -44,36 +44,28 @@ class Inspector:
 
 def pytest_addoption(parser):
     group = parser.getgroup('filemarker')
-    group._addoption(
+    group.addoption(
         '--filemarker-active', action="store_true", dest="active", default=False,
         help='Should the plugin be active'
     )
-    group._addoption('--filemarker-marks', dest='marks', nargs='+',
-        help='Marks to include. Note this is a list of mark names, not expressions'
-    )
 
-    group._addoption('--filemarker-files', dest='files', nargs='+',
+    group.addoption('--filemarker-files', dest='files', nargs='+',
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
-    group._addoption('--filemarker-variable-name', dest='variable',
+    group.addoption('--filemarker-variable-name', dest='variable',
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
     parser.addini('filemarker_variable', help='joetest')
 
 class FileMarkerPlugin:
-    def __init__(self, variable, marks=None, files=None) -> None:
-        if marks is None:
-            marks = set()
-        else:
-            marks = set(marks)
-
+    def __init__(self, variable, files=None) -> None:
         if files is None:
             cmd = ['git', 'diff', '--name-only', '@{1}']
             files = subprocess.check_output(cmd, encoding='utf8').split()
             files = [f for f in files if f.endswith('.py') and os.path.isfile(f)]
-        self._marks = marks
+        self._marks = set()
         for f in files:
             inspector = Inspector(f, variable)
             inspector.inspect()
@@ -102,16 +94,15 @@ class FileMarkerPlugin:
 def pytest_configure(config):
     active = config.getoption("active")
     variable = config.getoption('variable')
-    marks = config.getoption('marks')
     files = config.getoption('files')
 
-    active = active or any([variable, marks, files])
+    active = active or any([variable, files])
 
     if variable is None:
         variable = config.getini('filemarker_variable') or 'PYTEST_MARKS'
 
     if active:
         plugin = FileMarkerPlugin(
-            variable, marks=marks, files=files
+            variable, files=files
         )
         config.pluginmanager.register(plugin, "_filemarker")
