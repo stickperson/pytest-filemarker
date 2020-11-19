@@ -16,9 +16,12 @@ class PytestNameVisitor(ast.NodeVisitor):
             if isinstance(target, ast.Name) and target.id == self._variable:
                 if not isinstance(node.value, (ast.List, ast.Tuple)):
                     raise Exception('bad')
-                constants = [elt for elt in node.value.elts if isinstance(elt, ast.Constant)]
-                for elt in constants:
-                    self.marks.add(elt.value)
+                for elt in node.value.elts:
+                    # ast.Constant used since 3.8. ast.Str used before
+                    if hasattr(elt, 'value'):
+                        self.marks.add(elt.value)
+                    elif hasattr(elt, 's'):
+                        self.marks.add(elt.s)
 
 
 class Inspector:
@@ -61,8 +64,6 @@ def pytest_addoption(parser):
 
 class FileMarkerPlugin:
     def __init__(self, variable, marks=None, files=None) -> None:
-        print('init')
-        print(variable)
         if marks is None:
             marks = set()
         else:
@@ -109,7 +110,6 @@ def pytest_configure(config):
 
     if variable is None:
         variable = config.getini('filemarker_variable') or 'PYTEST_MARKS'
-        print(variable)
 
     if active:
         plugin = FileMarkerPlugin(
