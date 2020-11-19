@@ -1,20 +1,24 @@
 import ast
 import os.path
 import subprocess
+from typing import Set
+
+import pytest
 
 class PytestNameVisitor(ast.NodeVisitor):
-    def __init__(self, variable) -> None:
+    def __init__(self, variable: str) -> None:
         super().__init__()
-        self.marks = set()
+        self.marks: Set[str] = set()
         self._variable = variable
 
     def visit_Assign(self, node: ast.Assign):
         for target in node.targets:
-            if 'id' in target._fields and target.id == self._variable:
-                if not isinstance(node.value, ast.List):
+            if isinstance(target, ast.Name) and target.id == self._variable:
+                if not isinstance(node.value, (ast.List, ast.Tuple)):
                     raise Exception('bad')
-                for elt in node.value.elts:
-                    self.marks.add(elt.s)
+                constants = [elt for elt in node.value.elts if isinstance(elt, ast.Constant)]
+                for elt in constants:
+                    self.marks.add(elt.value)
 
 
 class Inspector:
@@ -53,9 +57,12 @@ def pytest_addoption(parser):
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
+    parser.addini('filemarker_variable', help='joetest')
 
 class FileMarkerPlugin:
-    def __init__(self, variable, marks=None, files=None):
+    def __init__(self, variable, marks=None, files=None) -> None:
+        print('init')
+        print(variable)
         if marks is None:
             marks = set()
         else:
@@ -71,17 +78,25 @@ class FileMarkerPlugin:
             inspector.inspect()
             self._marks.update(inspector.report())
 
-    def pytest_collection_modifyitems(self, session, config, items):
-        covered = []
-        uncovered = []
+    @pytest.hookimpl(tryfirst=True)
+    def pytest_collection_modifyitems(self, session, config, items) -> None:
+        # marks = ' or '.join(self._marks)
+        # markexpr = config.getoption('markexpr')
+        # markexpr = f'{markexpr} or {marks}'
+        # # config.option.markexpr = markexpr
+        # print('')
+        # print('**')
+        # config.option.markexpr = ''
+        # print(config.option.markexpr)
+        skip = pytest.mark.skip(reason='Skipping because no marks match')
         for item in items:
+            skip_item = True
             for m in item.iter_markers():
                 if m.name in self._marks:
-                    covered.append(item)
+                    skip_item = False
                     continue
-            uncovered.append(item)
-        items[:] = covered
-        config.hook.pytest_deselected(items=uncovered)
+            if skip_item:
+                item.add_marker('skip')
 
 
 def pytest_configure(config):
@@ -93,7 +108,8 @@ def pytest_configure(config):
     active = active or any([variable, marks, files])
 
     if variable is None:
-        variable = 'PYTEST_MARKS'
+        variable = config.getini('filemarker_variable') or 'PYTEST_MARKS'
+        print(variable)
 
     if active:
         plugin = FileMarkerPlugin(
