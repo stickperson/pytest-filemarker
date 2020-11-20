@@ -6,7 +6,7 @@ from typing import Set
 import pytest
 
 
-class PytetFilemakerException(Exception):
+class PytestFileMarkerException(Exception):
     pass
 
 
@@ -20,7 +20,7 @@ class PytestNameVisitor(ast.NodeVisitor):
         for target in node.targets:
             if isinstance(target, ast.Name) and target.id == self._variable:
                 if not isinstance(node.value, (ast.List, ast.Tuple)):
-                    raise PytetFilemakerException(f'Variable {self._variable} must be a list or tuple')
+                    raise PytestFileMarkerException(f'Variable {self._variable} must be a list or tuple')
                 for elt in node.value.elts:
                     # ast.Constant used since 3.8. ast.Str used before
                     if hasattr(elt, 'value'):
