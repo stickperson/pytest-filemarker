@@ -6,6 +6,10 @@ from typing import Set
 import pytest
 
 
+class PytetFilemakerException(Exception):
+    pass
+
+
 class PytestNameVisitor(ast.NodeVisitor):
     def __init__(self, variable: str) -> None:
         super().__init__()
@@ -16,7 +20,7 @@ class PytestNameVisitor(ast.NodeVisitor):
         for target in node.targets:
             if isinstance(target, ast.Name) and target.id == self._variable:
                 if not isinstance(node.value, (ast.List, ast.Tuple)):
-                    raise Exception('bad')
+                    raise PytetFilemakerException(f'Variable {self._variable} must be a list or tuple')
                 for elt in node.value.elts:
                     # ast.Constant used since 3.8. ast.Str used before
                     if hasattr(elt, 'value'):
@@ -55,7 +59,7 @@ def pytest_addoption(parser):
     )
 
     group.addoption(
-        '--filemarker-variable-name', dest='variable',
+        '--filemarker-variable', dest='variable',
         help='Variable which contains a list of marks. Defaults to PYTEST_MARKS'
     )
 

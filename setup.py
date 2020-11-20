@@ -7,7 +7,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name="pytest-filemarker",
-    version='0.1.1a',
+    version='0.1.0.dev2',
     description='A pytest plugin that runs marked tests when files change.',
     long_description=readme,
     long_description_content_type='text/markdown',

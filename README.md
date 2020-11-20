@@ -33,7 +33,7 @@ filemarker:
   --filemarker-files='file1 file2...'
                         Files to search. If not supplied will look at the latest
                         changes from git.
-  --filemarker-variable-name=VARIABLE
+  --filemarker-variable=VARIABLE
                         Variable which contains a list of marks. Defaults to
                         PYTEST_MARKS
 ```
