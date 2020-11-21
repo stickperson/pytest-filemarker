@@ -97,6 +97,7 @@ class FileMarkerPlugin:
             config.hook.pytest_deselected(items=items)
             items[:] = []
 
+
 def pytest_configure(config):
     active = config.getoption("active")
     variable = config.getoption('variable')
