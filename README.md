@@ -24,7 +24,7 @@ pytest --filemarker-active
 By default, the plugin will use `git` to look at the changes between `HEAD` and `HEAD~1` to generate a list of files to inspect. To override this, use the `--filemarker-files` parameter:
 
 ```
-pytest --filemarker-files='<file1> <file2>'
+pytest --filemarker-files=FILE1,FILE2
 ```
 
 ## Options
@@ -32,7 +32,7 @@ pytest --filemarker-files='<file1> <file2>'
 filemarker:
   --filemarker-active   Should the plugin be active? Automatically set to True
                         if other options are specified.
-  --filemarker-files='file1 file2...'
+  --filemarker-files=FILE1,FILE2
                         Files to search. If not supplied will look at the latest
                         changes from git.
   --filemarker-variable=VARIABLE
