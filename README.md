@@ -2,6 +2,8 @@
 
 A [pytest](https://docs.pytest.org/en/stable/) plugin that runs marked tests when files change.
 
+![Tests](https://github.com/stickperson/pytest-filemarker/workflows/Tests/badge.svg) [![Downloads](https://pepy.tech/badge/pytest-filemarker)](https://pepy.tech/project/pytest-filemarker)
+
 ## Usage
 Files should have a `PYTEST_MARKS` variable containing a list of marked tests to run when the files change.
 
