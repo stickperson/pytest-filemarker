@@ -106,15 +106,16 @@ def test_mark_variable(testdir):
 
 
 @pytest.mark.filterwarnings("ignore")
-def test_no_matches(testdir):
-    first = """
-        PYTEST_MARKS = ['bad']
-    """
-    marker = testdir.makepyfile(mark=first)
+def test_no_marks(testdir):
+    f = ''
+    marker = testdir.makepyfile(mark=f)
     test = testdir.makepyfile(test=FILE)
     args = ['-v', f'--filemarker-files={marker}', test]
     result = testdir.runpytest(*args)
     assert result.ret == 5
+    result.stdout.fnmatch_lines_random([
+        '*4 deselected*',
+    ])
 
 
 @pytest.mark.filterwarnings("ignore")
