@@ -50,11 +50,11 @@ def pytest_addoption(parser):
     group = parser.getgroup('filemarker')
     group.addoption(
         '--filemarker-active', action="store_true", dest="active", default=False,
-        help='Should the plugin be active? Automatically set to True if other options are specified.'
+        help='Should the plugin be active? Automatically set to True if other options are specified via the cli.'
     )
 
     group.addoption(
-        '--filemarker-files', dest='files', metavar="'file1 file2...'",
+        '--filemarker-files', dest='files', metavar="FILE1,FILE2",
         help='Files to search. If not supplied will look at the latest changes from git.'
     )
 
@@ -109,7 +109,7 @@ def pytest_configure(config):
         variable = config.getini('filemarker-variable') or 'PYTEST_MARKS'
 
     if files:
-        files = files.split()
+        files = files.split(',')
 
     if active:
         plugin = FileMarkerPlugin(

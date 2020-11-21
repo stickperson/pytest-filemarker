@@ -76,7 +76,7 @@ def test_multiple_files(testdir):
     second_marker = testdir.makepyfile(second=second)
     test = testdir.makepyfile(test=FILE)
 
-    files = f'{first_marker} {second_marker}'
+    files = f'{first_marker},{second_marker}'
     args = ['-v', f'--filemarker-files={files}', test]
     result = testdir.runpytest(*args)
     assert result.ret == 0
