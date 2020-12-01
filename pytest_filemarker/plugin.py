@@ -70,7 +70,12 @@ class FileMarkerPlugin:
     def __init__(self, variable, files=None) -> None:
         if files is None:
             cmd = ['git', 'diff', '--name-only', '@{1}']
-            files = subprocess.check_output(cmd, encoding='utf8').split()
+            try:
+                diff = subprocess.check_output(cmd, encoding='utf8')
+            except subprocess.CalledProcessError:
+                cmd = ['git', 'diff', '--name-only', '@~']
+                diff = subprocess.check_output(cmd, encoding='utf8')
+            files = diff.split()
             files = [f for f in files if f.endswith('.py') and os.path.isfile(f)]
         self._marks = set()
         for f in files:

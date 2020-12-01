@@ -134,17 +134,42 @@ def test_bad_variable(testdir):
 
 
 @pytest.mark.filterwarnings("ignore")
-def test_active_no_files_passed(testdir, mocker):
+def test_active_no_files_passed_default_fallback(testdir, mocker):
     first = """
         PYTEST_MARKS = ['first']
     """
     marker = testdir.makepyfile(mark=first)
-    mocker.patch.object(subprocess, 'check_output', return_value=f'{marker}')
+    mock = mocker.patch.object(subprocess, 'check_output', return_value=f'{marker}')
 
     test = testdir.makepyfile(test=FILE)
     args = ['-v', '--filemarker-active', test]
     result = testdir.runpytest(*args)
     assert result.ret == 0
+    assert mock.call_count == 1
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines_random([
+        '*test.py::test_first PASSED*',
+    ])
+
+@pytest.mark.filterwarnings("ignore")
+def test_active_no_files_passed_no_reflog_fallback(testdir, mocker):
+    def _side_effect(cmd, *args, **kwargs):
+        if cmd == ['git', 'diff', '--name-only', '@{1}']:
+            raise subprocess.CalledProcessError(128, cmd)
+        else:
+            first = """
+                PYTEST_MARKS = ['first']
+            """
+            marker = testdir.makepyfile(mark=first)
+            return f'{marker}'
+
+    mock = mocker.patch.object(subprocess, 'check_output', side_effect=_side_effect)
+
+    test = testdir.makepyfile(test=FILE)
+    args = ['-v', '--filemarker-active', test]
+    result = testdir.runpytest(*args)
+    assert result.ret == 0
+    assert mock.call_count == 2
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines_random([
         '*test.py::test_first PASSED*',
